@@ -2,7 +2,7 @@
   "name": "check-proxy-ws",
   "version": "1.0.0",
   "description": "A checker proxy ws project to allow deployed applications to cloudflare pages and workers to be accessed via a custom domain.",
-  "main": "_worker.js",
+  "main": "node.js",
   "scripts": {
     "deploy": "wrangler deploy",
     "build": "wrangler deploy --dry-run",
