@@ -1,0 +1,14 @@
+project-folder/
+│
+├─ netlify.toml
+├─ index.html
+│
+└─ netlify/
+   └─ functions/
+      └─ proxy-checker.js
+
+
+
+https://NAMASITE.netlify.app/api/v1?ip=31.24.253.246&port=2053
+
+https://bespoke-arithmetic-e4c335.netlify.app/
