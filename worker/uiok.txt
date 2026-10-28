@@ -1,0 +1,1596 @@
+export default {
+  async fetch(request) {
+    // Handle POST request for checking proxies
+if (request.method === "POST") {
+  try {
+    const { ip, port } = await request.json();
+
+    // API BARU (Netlify)
+    const url = `https://pro-xychecker.netlify.app/api/v1/?ip=${ip}:${port}`;
+    const res = await fetch(url);
+
+    const raw = await res.json();
+
+    let data = {
+      error: false,
+      proxyip: raw.proxyip === true,
+      ip: raw.ip || ip,
+      proxy: raw.proxy || ip,
+      port: raw.port || port,
+      delay: raw.delay || "",
+      asn: raw.asn || null,
+      asOrganization: raw.asOrganization || "",
+      colo: raw.colo || "",
+      country: raw.country || "",
+      countryCode: raw.country || "",
+      city: raw.city || "",
+      postalCode: raw.postalCode || "",
+      latitude: raw.latitude || "",
+      longitude: raw.longitude || "",
+      httpProtocol: raw.httpProtocol || ""
+    };
+
+    if (!raw.proxyip) data.error = true;
+
+    return new Response(JSON.stringify(data), {
+      headers: { "Content-Type": "application/json" }
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: true }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+}
+
+    // Return HTML page
+    return new Response(htmlContent, {
+      headers: { "Content-Type": "text/html; charset=utf-8" }
+    });
+  }
+}
+
+const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Proxy Checker - MAX PARALLEL + RETRY + ACCOUNT GENERATOR</title>
+<style>
+body { 
+background: #1a1a1a; 
+color: white; 
+font-family: Arial; 
+padding: 20px; 
+margin: 0;
+}
+.container { 
+max-width: 100%; 
+margin: 0 auto; 
+}
+h1 { 
+color: #00ff88; 
+text-align: center; 
+margin: 0 0 20px 0;
+}
+.section { 
+background: #2a2a2a; 
+padding: 15px; 
+margin: 10px 0; 
+border-radius: 8px; 
+}
+textarea { 
+width: 100%; 
+height: 200px; 
+background: #1a1a1a; 
+color: white; 
+border: 1px solid #444; 
+padding: 10px; 
+font-size: 12px;
+}
+button { 
+background: #0088ff; 
+color: white; 
+border: none; 
+padding: 10px 15px; 
+margin: 5px; 
+border-radius: 5px; 
+cursor: pointer; 
+}
+button:hover { 
+background: #0066cc; 
+}
+button:disabled { 
+background: #666; 
+cursor: not-allowed; 
+}
+table { 
+width: 100%; 
+border-collapse: collapse; 
+margin-top: 20px; 
+}
+th, td { 
+padding: 8px; 
+border: 1px solid #444; 
+text-align: left; 
+font-size: 12px;
+}
+th { 
+background: #333; 
+position: sticky;
+top: 0;
+}
+.active { 
+color: #00ff88; 
+font-weight: bold; 
+}
+.inactive { 
+color: #ff4444; 
+font-weight: bold; 
+}
+.checking { 
+color: #ffaa00; 
+font-weight: bold; 
+}
+.retrying {
+color: #ff8800;
+font-weight: bold;
+}
+.status { 
+padding: 10px; 
+margin: 10px 0; 
+border-radius: 5px; 
+}
+.success { 
+background: #1a472a; 
+border-left: 4px solid #00ff88; 
+}
+.error { 
+background: #4a1a1a; 
+border-left: 4px solid #ff4444; 
+}
+.warning { 
+background: #4a3a1a; 
+border-left: 4px solid #ffaa00; 
+}
+.loading-spinner {
+display: inline-block;
+width: 16px;
+height: 16px;
+border: 2px solid #f3f3f3;
+border-top: 2px solid #0088ff;
+border-radius: 50%;
+animation: spin 1s linear infinite;
+margin-right: 8px;
+}
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+select {
+background: #1a1a1a;
+color: white;
+border: 1px solid #444;
+padding: 8px;
+border-radius: 5px;
+margin: 5px;
+}
+input[type="text"] {
+background: #1a1a1a;
+color: white;
+border: 1px solid #444;
+padding: 8px;
+border-radius: 5px;
+margin: 5px;
+width: 300px;
+}
+.progress-bar {
+width: 100%;
+height: 10px;
+background: #333;
+border-radius: 5px;
+margin: 10px 0;
+overflow: hidden;
+}
+.progress-fill {
+height: 100%;
+background: #00ff88;
+transition: width 0.3s ease;
+}
+.stats-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+gap: 10px;
+margin: 10px 0;
+}
+.stat-card {
+background: #333;
+padding: 10px;
+border-radius: 5px;
+text-align: center;
+}
+.stat-value {
+font-size: 24px;
+font-weight: bold;
+color: #00ff88;
+}
+.max-parallel {
+background: linear-gradient(45deg, #ff0088, #00ff88);
+color: black;
+font-weight: bold;
+padding: 10px;
+border-radius: 5px;
+text-align: center;
+margin: 10px 0;
+}
+.retry-info {
+background: #2a2a2a;
+padding: 8px;
+border-radius: 5px;
+margin: 5px 0;
+font-size: 12px;
+border-left: 3px solid #ffaa00;
+}
+.copy-buttons {
+display: flex;
+flex-wrap: wrap;
+gap: 5px;
+margin: 10px 0;
+}
+.copy-btn {
+background: #555;
+padding: 8px 12px;
+font-size: 12px;
+}
+.copy-btn:hover {
+background: #666;
+}
+.results-container {
+max-height: 70vh;
+overflow-y: auto;
+border: 1px solid #444;
+border-radius: 8px;
+margin-top: 10px;
+}
+.url-toggle {
+background: #333;
+padding: 10px;
+border-radius: 5px;
+margin: 10px 0;
+}
+.url-toggle label {
+display: inline-block;
+margin-right: 15px;
+cursor: pointer;
+}
+.url-toggle input[type="radio"] {
+margin-right: 5px;
+}
+.custom-url-container {
+display: none;
+margin-top: 10px;
+}
+.url-info {
+font-size: 11px;
+color: #888;
+margin-top: 5px;
+}
+.github-presets {
+background: #333;
+padding: 10px;
+border-radius: 5px;
+margin: 10px 0;
+}
+.github-presets select {
+width: 100%;
+margin: 5px 0;
+}
+.account-generator {
+background: linear-gradient(45deg, #ff0088, #8800ff);
+padding: 15px;
+border-radius: 8px;
+margin: 10px 0;
+}
+.account-config {
+background: #333;
+padding: 15px;
+border-radius: 5px;
+margin: 10px 0;
+}
+.config-input {
+width: 100%;
+margin: 5px 0;
+}
+.config-group {
+margin: 10px 0;
+}
+.config-group label {
+display: block;
+margin-bottom: 5px;
+color: #00ff88;
+}
+.accounts-result {
+background: #1a1a1a;
+padding: 15px;
+border-radius: 5px;
+margin: 10px 0;
+max-height: 300px;
+overflow-y: auto;
+}
+.account-item {
+background: #2a2a2a;
+padding: 10px;
+margin: 5px 0;
+border-radius: 5px;
+border-left: 3px solid #0088ff;
+}
+.protocol-badge {
+background: #0088ff;
+color: white;
+padding: 2px 8px;
+border-radius: 10px;
+font-size: 10px;
+margin-right: 5px;
+}
+.vless-badge {
+background: #ff0088;
+}
+.trojan-badge {
+background: #00cc66;
+}
+/* Modal Styles */
+.modal {
+display: none;
+position: fixed;
+z-index: 1000;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0,0,0,0.8);
+}
+.modal-content {
+background-color: #2a2a2a;
+margin: 5% auto;
+padding: 20px;
+border-radius: 10px;
+width: 90%;
+max-width: 600px;
+max-height: 80vh;
+overflow-y: auto;
+}
+.close {
+color: #aaa;
+float: right;
+font-size: 28px;
+font-weight: bold;
+cursor: pointer;
+}
+.close:hover {
+color: white;
+}
+.proxy-info {
+background: #333;
+padding: 10px;
+border-radius: 5px;
+margin: 10px 0;
+text-align: center;
+font-weight: bold;
+color: #00ff88;
+}
+.generate-btn {
+background: #ff0088;
+color: white;
+border: none;
+padding: 12px 20px;
+border-radius: 5px;
+cursor: pointer;
+font-size: 16px;
+width: 100%;
+margin: 10px 0;
+}
+.generate-btn:hover {
+background: #cc0066;
+}
+.uuid-group {
+display: flex;
+gap: 10px;
+align-items: center;
+}
+.uuid-input {
+flex: 1;
+}
+.uuid-btn {
+background: #00cc66;
+white-space: nowrap;
+}
+.uuid-btn:hover {
+background: #00aa55;
+}
+.custom-url-group {
+margin: 10px 0;
+}
+.custom-url-input {
+width: 100%;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🔥 PROXY CHECKER - MAX PARALLEL + 20x RETRY + ACCOUNT GENERATOR 🔥</h1>
+<div class="max-parallel">
+⚡ MAX PARALLEL + 20x RETRY - SEMUA PROXY DICEK BERSAMAAN! ⚡
+</div>
+
+<div class="section">
+<h3>📁 AUTO-FILL PROXY DARI GITHUB (UNLIMITED)</h3>
+
+<div class="github-presets">
+<label for="githubPreset">🎯 Pilih Sumber Proxy:</label>
+<select id="githubPreset" onchange="onGitHubPresetChange()">
+<option value="default">🔒 Default URL (gopaybis)</option>
+<option value="foolvpn">🔧 FoolVPN Proxy List</option>
+<option value="custom">✏️ Custom URL</option>
+</select>
+</div>
+
+<div id="customUrlContainer" class="custom-url-container">
+<input type="text" id="customGitHubUrl" placeholder="https://raw.githubusercontent.com/username/repo/main/proxy.txt">
+<div class="url-info">Contoh: https://raw.githubusercontent.com/user/repo/branch/file.txt</div>
+</div>
+
+<select id="countrySelect">
+<option value="">🎯 Pilih Negara</option>
+<option value="ALL">🌍 SEMUA NEGARA</option>
+</select>
+<button onclick="loadCountries()" id="loadCountriesBtn">📋 LOAD DAFTAR NEGARA</button>
+<button onclick="loadProxiesFromGitHub()" id="loadProxyBtn">🚀 LOAD PROXY</button>
+<button onclick="clearProxies()">🗑️ CLEAR</button>
+<div id="status"></div>
+</div>
+
+<div class="section">
+<h3>📝 PROXY LIST (Format: IP:PORT) - <span id="proxyCount">0</span> proxy</h3>
+<textarea id="proxyInput" placeholder="Proxy akan muncul di sini..."></textarea>
+</div>
+
+<div class="section">
+<h3>⚡ MAX PARALLEL CHECKING + 20x RETRY</h3>
+<div class="retry-info">
+🔄 Setiap proxy yang error akan di-retry sampai 20x sampai berhasil!
+</div>
+<button onclick="startMaxParallelCheck()" style="background:#00cc66; font-size: 16px; padding: 15px;">
+🚀 START MAX PARALLEL + 20x RETRY
+</button>
+<button onclick="stopChecking()" style="background:#ff4444;">⏹️ STOP CHECKING</button>
+<div class="progress-bar">
+<div id="progressFill" class="progress-fill" style="width: 0%"></div>
+</div>
+<div>📊 Progress: <span id="progressText">0%</span> (<span id="checkedCount">0</span>/<span id="totalCount">0</span>)</div>
+</div>
+
+<div class="section">
+<h3>📊 STATISTIK REAL-TIME</h3>
+<div class="stats-grid">
+<div class="stat-card">
+<div>📦 Total</div>
+<div class="stat-value" id="total">0</div>
+</div>
+<div class="stat-card">
+<div>✅ Active</div>
+<div class="stat-value" id="active">0</div>
+</div>
+<div class="stat-card">
+<div>❌ Inactive</div>
+<div class="stat-value" id="inactive">0</div>
+</div>
+<div class="stat-card">
+<div>🚫 Error</div>
+<div class="stat-value" id="error">0</div>
+</div>
+<div class="stat-card">
+<div>🔄 Retry Count</div>
+<div class="stat-value" id="retryCount">0</div>
+</div>
+<div class="stat-card">
+<div>⚡ Speed</div>
+<div class="stat-value" id="speed">0</div>
+<div>proxy/detik</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h3>🎯 FITUR SALIN & DOWNLOAD</h3>
+<div class="copy-buttons">
+<button onclick="copyActive()" class="copy-btn">📋 Salin Active</button>
+<button onclick="copyIpPort()" class="copy-btn">🔗 Salin IP:Port Active</button>
+<button onclick="copyInactive()" class="copy-btn">📋 Salin Inactive</button>
+<button onclick="copyIpPortInactive()" class="copy-btn">🔗 Salin IP:Port Inactive</button>
+<button onclick="copyError()" class="copy-btn">📋 Salin Error</button>
+<button onclick="copyIpPortError()" class="copy-btn">🔗 Salin IP:Port Error</button>
+<button onclick="downloadActive()" class="copy-btn">💾 Download Active</button>
+<button onclick="downloadAll()" class="copy-btn">💾 Download All Results</button>
+</div>
+</div>
+
+<!-- ACCOUNT GENERATOR MODAL -->
+<div id="accountModal" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal()">&times;</span>
+<h2>🚀 GENERATE AKUN VLESS & TROJAN</h2>
+
+<div class="proxy-info" id="selectedProxyInfo">
+Proxy: <span id="proxyIpPort">-</span> | Country: <span id="proxyCountry">-</span>
+</div>
+
+<div class="account-config">
+<div class="config-group">
+<label>🌐 Pilih Domain:</label>
+<select id="domainSelect" class="config-input">
+<option value="v3.lifetime01.workers.dev">v3.lifetime01.workers.dev</option>
+<option value="v3.lifetime02.workers.dev">v3.lifetime02.workers.dev</option>
+<option value="v3.lifetime03.workers.dev">v3.lifetime03.workers.dev</option>
+<option value="v3.lifetime04.workers.dev">v3.lifetime04.workers.dev</option>
+<option value="v3.lifetime05.workers.dev">v3.lifetime05.workers.dev</option>
+<option value="v3.lifetime06.workers.dev">v3.lifetime06.workers.dev</option>
+<option value="v3.lifetime07.workers.dev">v3.lifetime07.workers.dev</option>
+<option value="v3.lifetime08.workers.dev">v3.lifetime08.workers.dev</option>
+<option value="v3.lifetime09.workers.dev">v3.lifetime09.workers.dev</option>
+<option value="v3.lifetime10.workers.dev">v3.lifetime10.workers.dev</option>
+<option value="v3.lifetime11.workers.dev">v3.lifetime11.workers.dev</option>
+<option value="v3.lifetime12.workers.dev">v3.lifetime12.workers.dev</option>
+<option value="v3.lifetime13.workers.dev">v3.lifetime13.workers.dev</option>
+<option value="v3.lifetime14.workers.dev">v3.lifetime14.workers.dev</option>
+<option value="v3.lifetime15.workers.dev">v3.lifetime15.workers.dev</option>
+<option value="v3.lifetime16.workers.dev">v3.lifetime16.workers.dev</option>
+<option value="v3.lifetime17.workers.dev">v3.lifetime17.workers.dev</option>
+<option value="v3.lifetime18.workers.dev">v3.lifetime18.workers.dev</option>
+<option value="v3.lifetime19.workers.dev">v3.lifetime19.workers.dev</option>
+<option value="v3.lifetime20.workers.dev">v3.lifetime20.workers.dev</option>
+<option value="v3.lifetime21.workers.dev">v3.lifetime21.workers.dev</option>
+<option value="v3.lifetime22.workers.dev">v3.lifetime22.workers.dev</option>
+<option value="v3.lifetime23.workers.dev">v3.lifetime23.workers.dev</option>
+<option value="v3.lifetime24.workers.dev">v3.lifetime24.workers.dev</option>
+<option value="v3.lifetime25.workers.dev">v3.lifetime25.workers.dev</option>
+<option value="v3.lifetime26.workers.dev">v3.lifetime26.workers.dev</option>
+<option value="v3.lifetime27.workers.dev">v3.lifetime27.workers.dev</option>
+<option value="v3.lifetime28.workers.dev">v3.lifetime28.workers.dev</option>
+<option value="v3.lifetime29.workers.dev">v3.lifetime29.workers.dev</option>
+<option value="v3.lifetime30.workers.dev">v3.lifetime30.workers.dev</option>
+<option value="v3.lifetime31.workers.dev">v3.lifetime31.workers.dev</option>
+<option value="v3.lifetime32.workers.dev">v3.lifetime32.workers.dev</option>
+<option value="v3.lifetime33.workers.dev">v3.lifetime33.workers.dev</option>
+<option value="v3.lifetime34.workers.dev">v3.lifetime34.workers.dev</option>
+<option value="v3.lifetime35.workers.dev">v3.lifetime35.workers.dev</option>
+<option value="v3.lifetime36.workers.dev">v3.lifetime36.workers.dev</option>
+<option value="v3.lifetime37.workers.dev">v3.lifetime37.workers.dev</option>
+<option value="v3.lifetime38.workers.dev">v3.lifetime38.workers.dev</option>
+<option value="v3.lifetime39.workers.dev">v3.lifetime39.workers.dev</option>
+<option value="v3.lifetime40.workers.dev">v3.lifetime40.workers.dev</option>
+<option value="v3.lifetime41.workers.dev">v3.lifetime41.workers.dev</option>
+<option value="v3.lifetime42.workers.dev">v3.lifetime42.workers.dev</option>
+<option value="v3.lifetime43.workers.dev">v3.lifetime43.workers.dev</option>
+<option value="v3.lifetime44.workers.dev">v3.lifetime44.workers.dev</option>
+<option value="v3.lifetime45.workers.dev">v3.lifetime45.workers.dev</option>
+<option value="v3.lifetime46.workers.dev">v3.lifetime46.workers.dev</option>
+<option value="v3.lifetime47.workers.dev">v3.lifetime47.workers.dev</option>
+<option value="v3.lifetime48.workers.dev">v3.lifetime48.workers.dev</option>
+<option value="v3.lifetime49.workers.dev">v3.lifetime49.workers.dev</option>
+<option value="v3.lifetime50.workers.dev">v3.lifetime50.workers.dev</option>
+<option value="v3.lifetime51.workers.dev">v3.lifetime51.workers.dev</option>
+<option value="v3.lifetime52.workers.dev">v3.lifetime52.workers.dev</option>
+<option value="v3.lifetime53.workers.dev">v3.lifetime53.workers.dev</option>
+<option value="v3.lifetime54.workers.dev">v3.lifetime54.workers.dev</option>
+<option value="v3.lifetime55.workers.dev">v3.lifetime55.workers.dev</option>
+<option value="v3.lifetime56.workers.dev">v3.lifetime56.workers.dev</option>
+<option value="v3.lifetime57.workers.dev">v3.lifetime57.workers.dev</option>
+<option value="v3.lifetime58.workers.dev">v3.lifetime58.workers.dev</option>
+<option value="v3.lifetime59.workers.dev">v3.lifetime59.workers.dev</option>
+<option value="v3.lifetime60.workers.dev">v3.lifetime60.workers.dev</option>
+<option value="custom">🔧 Custom Domain</option>
+</select>
+</div>
+
+<div id="customDomainContainer" class="custom-url-container">
+<div class="custom-url-group">
+<label>🔧 Custom Domain:</label>
+<input type="text" id="customDomain" class="custom-url-input" placeholder="custom-domain.workers.dev">
+</div>
+</div>
+
+<div class="config-group">
+<label>🔧 Konfigurasi Server:</label>
+<input type="text" id="serverHost" class="config-input" value="suporte.garena.com" placeholder="Host server">
+<input type="text" id="serverPort" class="config-input" value="443" placeholder="Port server">
+</div>
+
+<div class="config-group">
+<label>🆔 UUID VLESS:</label>
+<div class="uuid-group">
+<input type="text" id="vlessUUID" class="uuid-input" value="c6e48084-092e-46c7-a492-d311a8efb464" placeholder="UUID untuk VLESS">
+<button onclick="generateUUID('vlessUUID')" class="uuid-btn">🎲 Generate</button>
+</div>
+</div>
+
+<div class="config-group">
+<label>🆔 UUID Trojan:</label>
+<div class="uuid-group">
+<input type="text" id="trojanUUID" class="uuid-input" value="6e23b874-148f-4e9c-9ac7-36de5cd7a9bf" placeholder="UUID untuk Trojan">
+<button onclick="generateUUID('trojanUUID')" class="uuid-btn">🎲 Generate</button>
+</div>
+</div>
+
+<div class="config-group">
+<label>📡 Path:</label>
+<input type="text" id="accountPath" class="config-input" value="/ip-port" placeholder="Path untuk WS" readonly>
+<div style="font-size: 11px; color: #888; margin-top: 5px;">
+Path akan otomatis menggunakan format: /ip-port
+</div>
+</div>
+
+<div class="config-group">
+<label>🏷️ Nama Akun:</label>
+<input type="text" id="accountName" class="config-input" value="MR44J Rotate Proxy 🌐" placeholder="Nama untuk akun">
+</div>
+
+<div class="config-group">
+<label>🔒 Protocol:</label>
+<div>
+<label><input type="checkbox" id="generateVless" checked> VLESS</label>
+<label><input type="checkbox" id="generateTrojan" checked> Trojan</label>
+</div>
+</div>
+
+<button class="generate-btn" onclick="generateSingleAccount()">
+🚀 GENERATE AKUN
+</button>
+</div>
+
+<div class="accounts-result" id="accountsResult">
+<div style="text-align: center; color: #888; padding: 20px;">
+Hasil akun VLESS dan Trojan akan muncul di sini...
+</div>
+</div>
+
+<div class="copy-buttons">
+<button onclick="copyAllAccounts()" class="copy-btn" style="background:#ff0088;">📋 Salin Semua Akun</button>
+<button onclick="copyVlessAccounts()" class="copy-btn" style="background:#ff0088;">📋 Salin VLESS Only</button>
+<button onclick="copyTrojanAccounts()" class="copy-btn" style="background:#00cc66;">📋 Salin Trojan Only</button>
+<button onclick="downloadAccounts()" class="copy-btn" style="background:#8800ff;">💾 Download All Accounts</button>
+</div>
+</div>
+</div>
+
+<div class="section">
+<h3>📋 HASIL CHECKING (Real-time)</h3>
+<div class="results-container">
+<table>
+<thead>
+<tr>
+<th># No</th>
+<th>IP</th>
+<th>Port</th>
+<th>Status</th>
+<th>Retry</th>
+<th>Country</th>
+<th>ISP</th>
+<th>Protocol</th>
+<th>Delay</th>
+<th>Aksi</th>
+</tr>
+</thead>
+<tbody id="results"></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<script>
+let isChecking = false;
+let checkStartTime = 0;
+let completedChecks = 0;
+let totalProxies = 0;
+let totalRetries = 0;
+let selectedProxy = null;
+
+// Default GitHub URLs
+const GITHUB_URLS = {
+default: 'https://raw.githubusercontent.com/gopaybis/Proxylist/refs/heads/main/proxyiplengkap3.txt',
+foolvpn: 'https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/proxyList.txt'
+};
+
+// Function to handle GitHub preset change
+function onGitHubPresetChange() {
+const preset = document.getElementById('githubPreset').value;
+const customUrlContainer = document.getElementById('customUrlContainer');
+const customUrlInput = document.getElementById('customGitHubUrl');
+
+if (preset === 'custom') {
+customUrlContainer.style.display = 'block';
+// Set placeholder untuk custom URL
+customUrlInput.placeholder = 'https://raw.githubusercontent.com/username/repo/main/proxy.txt';
+} else {
+customUrlContainer.style.display = 'none';
+// Set URL berdasarkan preset
+if (preset === 'foolvpn') {
+customUrlInput.value = GITHUB_URLS.foolvpn;
+} else {
+customUrlInput.value = GITHUB_URLS.default;
+}
+}
+}
+
+// Function to handle domain selection change
+function onDomainSelectChange() {
+const domainSelect = document.getElementById('domainSelect');
+const customDomainContainer = document.getElementById('customDomainContainer');
+const customDomainInput = document.getElementById('customDomain');
+
+if (domainSelect.value === 'custom') {
+customDomainContainer.style.display = 'block';
+} else {
+customDomainContainer.style.display = 'none';
+}
+}
+
+// Function to get current domain based on selection
+function getCurrentDomain() {
+const domainSelect = document.getElementById('domainSelect');
+const customDomain = document.getElementById('customDomain').value.trim();
+
+if (domainSelect.value === 'custom') {
+if (customDomain && isValidDomain(customDomain)) {
+return customDomain;
+} else {
+showStatus('❌ Domain tidak valid!', 'error');
+return null;
+}
+} else {
+return domainSelect.value;
+}
+}
+
+// Function to validate domain
+function isValidDomain(domain) {
+// Simple domain validation
+return domain.length > 0 && domain.includes('.') && !domain.includes(' ');
+}
+
+// Function to generate UUID
+function generateUUID(fieldId) {
+const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+const r = Math.random() * 16 | 0;
+const v = c == 'x' ? r : (r & 0x3 | 0x8);
+return v.toString(16);
+});
+document.getElementById(fieldId).value = uuid;
+showStatus('✅ UUID berhasil digenerate!');
+}
+
+// Function to get current GitHub URL based on selection
+function getGitHubUrl() {
+const preset = document.getElementById('githubPreset').value;
+const customUrl = document.getElementById('customGitHubUrl').value.trim();
+
+if (preset === 'custom') {
+if (customUrl && isValidUrl(customUrl)) {
+return customUrl;
+} else {
+showStatus('❌ URL GitHub tidak valid!', 'error');
+return null;
+}
+} else {
+// Return URL dari preset
+return GITHUB_URLS[preset] || GITHUB_URLS.default;
+}
+}
+
+// Function to validate URL
+function isValidUrl(string) {
+try {
+new URL(string);
+return true;
+} catch (_) {
+return false;
+}
+}
+
+// Function to get flag emoji from country code
+function getFlagEmoji(countryCode) {
+if (!countryCode || countryCode.length !== 2) return '';
+const country = countryCode.toUpperCase();
+return String.fromCodePoint(...Array.from(country).map(char => 
+127397 + char.charCodeAt()
+));
+}
+
+// Function to extract clean country code (remove flag but keep country code)
+function getCleanCountryCode(countryText) {
+if (!countryText) return '';
+if (countryText.length === 2 && /^[A-Z]{2}$/.test(countryText)) {
+return countryText;
+}
+const match = countryText.match(/^([A-Z]{2})/);
+if (match) {
+return match[1];
+}
+return '';
+}
+
+// Update proxy count
+function updateCount() {
+const input = document.getElementById('proxyInput').value;
+const lines = input.split('\\n').filter(line => line.trim() && line.includes(':'));
+document.getElementById('proxyCount').textContent = lines.length;
+}
+
+// Show status message
+function showStatus(message, type = 'info') {
+const statusEl = document.getElementById('status');
+const className = type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'success';
+statusEl.innerHTML = '<div class="status ' + className + '">' + message + '</div>';
+if (type !== 'error') {
+setTimeout(() => {
+statusEl.innerHTML = '';
+}, 5000);
+}
+}
+
+// Set button loading state
+function setLoading(buttonId, isLoading) {
+const btn = document.getElementById(buttonId);
+if (isLoading) {
+btn.disabled = true;
+btn.innerHTML = '<span class="loading-spinner"></span> LOADING...';
+} else {
+btn.disabled = false;
+if (buttonId === 'loadCountriesBtn') {
+btn.textContent = '📋 LOAD DAFTAR NEGARA';
+} else if (buttonId === 'loadProxyBtn') {
+btn.textContent = '🚀 LOAD PROXY';
+}
+}
+}
+
+// Load countries from GitHub
+async function loadCountries() {
+setLoading('loadCountriesBtn', true);
+const githubUrl = getGitHubUrl();
+if (!githubUrl) {
+setLoading('loadCountriesBtn', false);
+return;
+}
+
+showStatus('Mengambil daftar negara dari GitHub...');
+
+try {
+const response = await fetch(githubUrl);
+if (!response.ok) {
+throw new Error('Gagal mengambil data dari GitHub');
+}
+
+const text = await response.text();
+const lines = text.split('\\n').filter(line => line.trim());
+const countries = new Set();
+
+lines.forEach(line => {
+const parts = line.split(',');
+if (parts[2] && parts[2].trim()) {
+countries.add(parts[2].trim());
+}
+});
+
+const select = document.getElementById('countrySelect');
+select.innerHTML = '<option value="">🎯 Pilih Negara</option><option value="ALL">🌍 SEMUA NEGARA</option>';
+const sortedCountries = Array.from(countries).sort();
+
+sortedCountries.forEach(countryCode => {
+const option = document.createElement('option');
+option.value = countryCode;
+const flag = getFlagEmoji(countryCode);
+option.textContent = flag ? countryCode + ' ' + flag : countryCode;
+select.appendChild(option);
+});
+
+showStatus('✅ Berhasil memuat ' + sortedCountries.length + ' negara dari GitHub');
+} catch (error) {
+console.error('Error:', error);
+showStatus('❌ Gagal memuat daftar negara: ' + error.message, 'error');
+const fallbackCountries = [
+{code: 'US', flag: '🇺🇸'}, 
+{code: 'ID', flag: '🇮🇩'}, 
+{code: 'SG', flag: '🇸🇬'}, 
+{code: 'JP', flag: '🇯🇵'}, 
+{code: 'GB', flag: '🇬🇧'}, 
+{code: 'DE', flag: '🇩🇪'}, 
+{code: 'FR', flag: '🇫🇷'}, 
+{code: 'CA', flag: '🇨🇦'}, 
+{code: 'AU', flag: '🇦🇺'}, 
+{code: 'BR', flag: '🇧🇷'}
+];
+const select = document.getElementById('countrySelect');
+select.innerHTML = '<option value="">🎯 Pilih Negara</option><option value="ALL">🌍 SEMUA NEGARA</option>';
+fallbackCountries.forEach(country => {
+const option = document.createElement('option');
+option.value = country.code;
+option.textContent = country.code + ' ' + country.flag;
+select.appendChild(option);
+});
+showStatus('⚠️ Menggunakan daftar negara fallback', 'warning');
+} finally {
+setLoading('loadCountriesBtn', false);
+}
+}
+
+// Load proxies from GitHub based on selected country - UNLIMITED
+async function loadProxiesFromGitHub() {
+const country = document.getElementById('countrySelect').value;
+if (!country) {
+showStatus('❌ Pilih negara terlebih dahulu!', 'error');
+return;
+}
+
+setLoading('loadProxyBtn', true);
+const githubUrl = getGitHubUrl();
+if (!githubUrl) {
+setLoading('loadProxyBtn', false);
+return;
+}
+
+showStatus('Mengambil proxy dari GitHub (tanpa batas)...');
+
+try {
+const response = await fetch(githubUrl);
+if (!response.ok) {
+throw new Error('Gagal mengambil data dari GitHub');
+}
+
+const text = await response.text();
+const lines = text.split('\\n').filter(line => line.trim());
+let proxies = [];
+
+lines.forEach(line => {
+const parts = line.split(',');
+if (parts.length >= 3 && parts[0] && parts[1]) {
+const proxyCountry = parts[2].trim();
+const ip = parts[0].trim();
+const port = parts[1].trim();
+if (country === 'ALL' || proxyCountry === country) {
+proxies.push(ip + ':' + port);
+}
+}
+});
+
+if (proxies.length === 0) {
+showStatus('❌ Tidak ada proxy ditemukan untuk negara: ' + country, 'error');
+return;
+}
+
+const preset = document.getElementById('githubPreset').value;
+const sourceName = preset === 'foolvpn' ? 'FoolVPN' : 'Default';
+showStatus('✅ Berhasil memuat ' + proxies.length + ' proxies dari ' + sourceName + ' - ' + country + ' ' + getFlagEmoji(country), 'success');
+
+document.getElementById('proxyInput').value = proxies.join('\\n');
+updateCount();
+} catch (error) {
+console.error('Error:', error);
+showStatus('❌ Gagal memuat proxy: ' + error.message, 'error');
+const fallbackProxies = getFallbackProxies(country);
+document.getElementById('proxyInput').value = fallbackProxies.join('\\n');
+updateCount();
+showStatus('⚠️ Menggunakan data fallback', 'warning');
+} finally {
+setLoading('loadProxyBtn', false);
+}
+}
+
+// Fallback proxy data
+function getFallbackProxies(country) {
+const fallbackData = {
+'ALL': [
+'91.187.93.166:443', '38.180.11.123:2053', '109.61.42.167:6633',
+'85.237.211.59:8443', '85.237.211.59:2053', '8.8.8.8:8080',
+'1.1.1.1:3128', '192.168.1.1:8080', '10.0.0.1:3128',
+'103.100.100.100:8080', '45.76.100.100:8080', '45.32.100.100:8080',
+'51.15.130.100:8080', '95.216.194.100:8080'
+],
+'US': ['8.8.8.8:8080', '1.1.1.1:3128', '192.168.1.1:8080'],
+'ID': ['103.100.100.100:8080', '103.100.100.101:8080', '103.100.100.102:8080'],
+'SG': ['45.76.100.100:8080', '45.76.100.101:8080'],
+'JP': ['45.32.100.100:8080', '45.32.100.101:8080'],
+'GB': ['51.15.130.100:8080', '51.15.130.101:8080'],
+'DE': ['95.216.194.100:8080', '95.216.194.101:8080']
+};
+
+return fallbackData[country] || fallbackData['ALL'];
+}
+
+function clearProxies() {
+document.getElementById('proxyInput').value = '';
+updateCount();
+showStatus('Daftar proxy dibersihkan');
+}
+
+// Check single proxy dengan RETRY 20x
+async function checkProxyWithRetry(ip, port, retryCell, maxRetries = 20) {
+let retryCount = 0;
+while (retryCount < maxRetries) {
+try {
+const response = await fetch('/', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ ip, port })
+});
+const data = await response.json();
+if (!data.error) {
+retryCell.textContent = retryCount + 1;
+totalRetries++;
+document.getElementById('retryCount').textContent = totalRetries;
+return data;
+}
+} catch (error) {
+// Continue to retry
+}
+retryCount++;
+retryCell.textContent = retryCount;
+totalRetries++;
+document.getElementById('retryCount').textContent = totalRetries;
+if (retryCount < maxRetries) {
+retryCell.parentElement.cells[3].textContent = 'Retrying ' + retryCount + '/' + maxRetries;
+retryCell.parentElement.cells[3].className = 'retrying';
+}
+if (retryCount < maxRetries) {
+await new Promise(resolve => setTimeout(resolve, 100));
+}
+}
+return { error: true };
+}
+
+// MAX PARALLEL CHECKING dengan RETRY 20x
+async function startMaxParallelCheck() {
+const input = document.getElementById('proxyInput').value;
+const lines = input.split('\\n').filter(line => line.trim() && line.includes(':'));
+if (lines.length === 0) {
+showStatus('❌ Tidak ada proxy untuk di-check!', 'error');
+return;
+}
+
+isChecking = true;
+checkStartTime = Date.now();
+completedChecks = 0;
+totalProxies = lines.length;
+totalRetries = 0;
+
+document.getElementById('total').textContent = totalProxies;
+document.getElementById('active').textContent = '0';
+document.getElementById('inactive').textContent = '0';
+document.getElementById('error').textContent = '0';
+document.getElementById('retryCount').textContent = '0';
+document.getElementById('speed').textContent = '0';
+document.getElementById('totalCount').textContent = totalProxies;
+document.getElementById('checkedCount').textContent = '0';
+document.getElementById('progressText').textContent = '0%';
+document.getElementById('progressFill').style.width = '0%';
+const results = document.getElementById('results');
+results.innerHTML = '';
+
+showStatus('🚀 MAX PARALLEL + 20x RETRY STARTED! Checking ' + totalProxies + ' proxy dengan retry otomatis!');
+
+const rows = [];
+lines.forEach((line, i) => {
+const [ip, port] = line.split(':');
+if (!ip || !port) return;
+
+const row = results.insertRow();
+row.insertCell(0).textContent = i + 1;
+row.insertCell(1).textContent = ip;
+row.insertCell(2).textContent = port;
+const statusCell = row.insertCell(3);
+const retryCell = row.insertCell(4);
+const countryCell = row.insertCell(5);
+const ispCell = row.insertCell(6);
+const protoCell = row.insertCell(7);
+const delayCell = row.insertCell(8);
+const actionCell = row.insertCell(9);
+
+statusCell.textContent = 'Checking...';
+statusCell.className = 'checking';
+retryCell.textContent = '0';
+retryCell.style.color = '#ffaa00';
+countryCell.textContent = '-';
+ispCell.textContent = '-';
+protoCell.textContent = '-';
+delayCell.textContent = '-';
+actionCell.innerHTML = '<button style="background:#ff0088; padding: 5px 10px; font-size: 10px;" disabled>🚀 Generate</button>';
+
+rows.push({
+row: row,
+ip: ip,
+port: port,
+statusCell: statusCell,
+retryCell: retryCell,
+countryCell: countryCell,
+ispCell: ispCell,
+protoCell: protoCell,
+delayCell: delayCell,
+actionCell: actionCell
+});
+});
+
+let active = 0, inactive = 0, error = 0;
+
+function updateProgress() {
+completedChecks++;
+const progress = (completedChecks / totalProxies) * 100;
+const elapsedTime = (Date.now() - checkStartTime) / 1000;
+const speed = elapsedTime > 0 ? (completedChecks / elapsedTime).toFixed(1) : '0';
+
+document.getElementById('checkedCount').textContent = completedChecks;
+document.getElementById('progressText').textContent = progress.toFixed(1) + '%';
+document.getElementById('progressFill').style.width = progress.toFixed(1) + '%';
+document.getElementById('speed').textContent = speed;
+
+if (completedChecks % 10 === 0 || completedChecks === totalProxies) {
+document.getElementById('active').textContent = active;
+document.getElementById('inactive').textContent = inactive;
+document.getElementById('error').textContent = error;
+document.getElementById('retryCount').textContent = totalRetries;
+}
+}
+
+const checkPromises = rows.map(async (proxyData, index) => {
+if (!isChecking) return;
+
+try {
+const data = await checkProxyWithRetry(proxyData.ip, proxyData.port, proxyData.retryCell, 20);
+if (data.error) {
+proxyData.statusCell.textContent = 'Error';
+proxyData.statusCell.className = 'inactive';
+error++;
+} else if (data.proxyip) {
+proxyData.statusCell.textContent = 'Active';
+proxyData.statusCell.className = 'active';
+active++;
+// Enable generate button for active proxies
+proxyData.actionCell.innerHTML = '<button style="background:#ff0088; padding: 5px 10px; font-size: 10px;" onclick="openAccountModal(\\'' + proxyData.ip + '\\', \\'' + proxyData.port + '\\', \\'' + (data.countryCode || '') + '\\')">🚀 Generate</button>';
+} else {
+proxyData.statusCell.textContent = 'Inactive';
+proxyData.statusCell.className = 'inactive';
+inactive++;
+}
+
+const countryCode = data.countryCode || '';
+const flag = getFlagEmoji(countryCode);
+proxyData.countryCell.textContent = countryCode ? countryCode + ' ' + flag : '-';
+proxyData.countryCell.setAttribute('data-country', countryCode);
+proxyData.ispCell.textContent = data.asOrganization || '-';
+proxyData.protoCell.textContent = data.httpProtocol || '-';
+proxyData.delayCell.textContent = data.delay || '-';
+} catch (e) {
+proxyData.statusCell.textContent = 'Error';
+proxyData.statusCell.className = 'inactive';
+error++;
+}
+
+updateProgress();
+});
+
+await Promise.allSettled(checkPromises);
+
+if (isChecking) {
+const totalTime = ((Date.now() - checkStartTime) / 1000).toFixed(1);
+showStatus('✅ MAX PARALLEL + RETRY COMPLETED! ' + totalProxies + ' proxy checked in ' + totalTime + ' seconds! Active: ' + active + ', Inactive: ' + inactive + ', Error: ' + error + ', Total Retries: ' + totalRetries);
+} else {
+showStatus('⏹️ Checking dihentikan! Active: ' + active + ', Inactive: ' + inactive + ', Error: ' + error + ', Total Retries: ' + totalRetries);
+}
+isChecking = false;
+}
+
+function stopChecking() {
+isChecking = false;
+showStatus('⏹️ Menghentikan checking...', 'error');
+}
+
+// ==================== MODAL FUNCTIONS ====================
+
+function openAccountModal(ip, port, country) {
+selectedProxy = { ip, port, country };
+document.getElementById('proxyIpPort').textContent = ip + ':' + port;
+document.getElementById('proxyCountry').textContent = country;
+document.getElementById('accountPath').value = '/' + ip + '-' + port;
+document.getElementById('accountsResult').innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">Hasil akun VLESS dan Trojan akan muncul di sini...</div>';
+document.getElementById('accountModal').style.display = 'block';
+}
+
+function closeModal() {
+document.getElementById('accountModal').style.display = 'none';
+selectedProxy = null;
+}
+
+function generateSingleAccount() {
+if (!selectedProxy) {
+showStatus('❌ Tidak ada proxy yang dipilih!', 'error');
+return;
+}
+
+// Get configuration values
+const domain = getCurrentDomain();
+if (!domain) return;
+
+const serverHost = document.getElementById('serverHost').value;
+const serverPort = document.getElementById('serverPort').value;
+const vlessUUID = document.getElementById('vlessUUID').value;
+const trojanUUID = document.getElementById('trojanUUID').value;
+const path = document.getElementById('accountPath').value;
+const accountName = document.getElementById('accountName').value;
+const generateVless = document.getElementById('generateVless').checked;
+const generateTrojan = document.getElementById('generateTrojan').checked;
+
+if (!generateVless && !generateTrojan) {
+showStatus('❌ Pilih minimal satu protocol (VLESS atau Trojan)!', 'error');
+return;
+}
+
+const accounts = [];
+
+if (generateVless) {
+const vlessConfig = \`vless://\${vlessUUID}@\${serverHost}:\${serverPort}?encryption=none&security=tls&sni=\${domain}&fp=randomized&type=ws&host=\${domain}&path=\${encodeURIComponent(path)}#\${encodeURIComponent(accountName)}\`;
+accounts.push({
+type: 'vless',
+config: vlessConfig
+});
+}
+
+if (generateTrojan) {
+const trojanConfig = \`trojan://\${trojanUUID}@\${serverHost}:\${serverPort}?sni=\${domain}&type=ws&host=\${domain}&path=\${encodeURIComponent(path)}#\${encodeURIComponent(accountName)}\`;
+accounts.push({
+type: 'trojan',
+config: trojanConfig
+});
+}
+
+// Display results
+const accountsResult = document.getElementById('accountsResult');
+accountsResult.innerHTML = '';
+
+accounts.forEach(account => {
+const accountItem = document.createElement('div');
+accountItem.className = 'account-item';
+const badgeClass = account.type === 'vless' ? 'protocol-badge vless-badge' : 'protocol-badge trojan-badge';
+accountItem.innerHTML = \`
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+<span class="\${badgeClass}">\${account.type.toUpperCase()}</span>
+</div>
+<div style="font-size: 11px; word-break: break-all; cursor: pointer;" onclick="copyToClipboard('\${account.config}')">\${account.config}</div>
+\`;
+accountsResult.appendChild(accountItem);
+});
+
+showStatus(\`✅ Berhasil generate \${accounts.length} akun untuk \${selectedProxy.ip}:\${selectedProxy.port}!\`);
+}
+
+// ==================== FITUR SALIN LENGKAP ====================
+
+function copyActive() {
+const activeRows = document.querySelectorAll('#results tr');
+let activeProxies = [];
+activeRows.forEach(row => {
+const cells = row.cells;
+if (cells[3].textContent === 'Active') {
+const ip = cells[1].textContent;
+const port = cells[2].textContent;
+const country = cells[5].getAttribute('data-country') || getCleanCountryCode(cells[5].textContent);
+const isp = cells[6].textContent || '-';
+// Format: IP,PORT,COUNTRY,ISP
+activeProxies.push(ip + ',' + port + ',' + country + ',' + isp);
+}
+});
+
+if (activeProxies.length === 0) {
+showStatus('❌ Tidak ada proxy aktif!', 'error');
+return;
+}
+
+const text = activeProxies.join('\\n');
+navigator.clipboard.writeText(text).then(() => {
+showStatus('✅ ' + activeProxies.length + ' proxy aktif disalin!');
+});
+}
+
+function copyIpPort() {
+const activeRows = document.querySelectorAll('#results tr');
+let activeProxies = [];
+activeRows.forEach(row => {
+const cells = row.cells;
+if (cells[3].textContent === 'Active') {
+// HANYA ambil IP dan Port saja, format: IP:Port
+const ip = cells[1].textContent;
+const port = cells[2].textContent;
+activeProxies.push(ip + ':' + port);
+}
+});
+
+if (activeProxies.length === 0) {
+showStatus('❌ Tidak ada proxy aktif!', 'error');
+return;
+}
+
+const text = activeProxies.join('\\n');
+navigator.clipboard.writeText(text).then(() => {
+showStatus('✅ ' + activeProxies.length + ' IP:Port aktif disalin!');
+});
+}
+
+function copyInactive() {
+const inactiveRows = document.querySelectorAll('#results tr');
+let inactiveProxies = [];
+inactiveRows.forEach(row => {
+const cells = row.cells;
+if (cells[3].textContent === 'Inactive') {
+const ip = cells[1].textContent;
+const port = cells[2].textContent;
+const country = cells[5].getAttribute('data-country') || getCleanCountryCode(cells[5].textContent);
+const isp = cells[6].textContent || '-';
+// Format: IP,PORT,COUNTRY,ISP
+inactiveProxies.push(ip + ',' + port + ',' + country + ',' + isp);
+}
+});
+
+if (inactiveProxies.length === 0) {
+showStatus('❌ Tidak ada proxy inactive!', 'error');
+return;
+}
+
+const text = inactiveProxies.join('\\n');
+navigator.clipboard.writeText(text).then(() => {
+showStatus('✅ ' + inactiveProxies.length + ' proxy inactive disalin!');
+});
+}
+
+function copyIpPortInactive() {
+const inactiveRows = document.querySelectorAll('#results tr');
+let inactiveProxies = [];
+inactiveRows.forEach(row => {
+const cells = row.cells;
+if (cells[3].textContent === 'Inactive') {
+// HANYA ambil IP dan Port saja, format: IP:Port
+const ip = cells[1].textContent;
+const port = cells[2].textContent;
+inactiveProxies.push(ip + ':' + port);
+}
+});
+
+if (inactiveProxies.length === 0) {
+showStatus('❌ Tidak ada proxy inactive!', 'error');
+return;
+}
+
+const text = inactiveProxies.join('\\n');
+navigator.clipboard.writeText(text).then(() => {
+showStatus('✅ ' + inactiveProxies.length + ' IP:Port inactive disalin!');
+});
+}
+
+function copyError() {
+const errorRows = document.querySelectorAll('#results tr');
+let errorProxies = [];
+errorRows.forEach(row => {
+const cells = row.cells;
+if (cells[3].textContent === 'Error') {
+const ip = cells[1].textContent;
+const port = cells[2].textContent;
+const country = cells[5].getAttribute('data-country') || getCleanCountryCode(cells[5].textContent);
+const isp = cells[6].textContent || '-';
+// Format: IP,PORT,COUNTRY,ISP
+errorProxies.push(ip + ',' + port + ',' + country + ',' + isp);
+}
+});
+
+if (errorProxies.length === 0) {
+showStatus('❌ Tidak ada proxy error!', 'error');
+return;
+}
+
+const text = errorProxies.join('\\n');
+navigator.clipboard.writeText(text).then(() => {
+showStatus('✅ ' + errorProxies.length + ' proxy error disalin!');
+});
+}
+
+function copyIpPortError() {
+const errorRows = document.querySelectorAll('#results tr');
+let errorProxies = [];
+errorRows.forEach(row => {
+const cells = row.cells;
+if (cells[3].textContent === 'Error') {
+// HANYA ambil IP dan Port saja, format: IP:Port
+const ip = cells[1].textContent;
+const port = cells[2].textContent;
+errorProxies.push(ip + ':' + port);
+}
+});
+
+if (errorProxies.length === 0) {
+showStatus('❌ Tidak ada proxy error!', 'error');
+return;
+}
+
+const text = errorProxies.join('\\n');
+navigator.clipboard.writeText(text).then(() => {
+showStatus('✅ ' + errorProxies.length + ' IP:Port error disalin!');
+});
+}
+
+function downloadActive() {
+const rows = document.querySelectorAll('#results tr');
+let activeProxies = [];
+rows.forEach(row => {
+const cells = row.cells;
+if (cells[3].textContent === 'Active') {
+// Untuk download, gunakan format IP:Port saja
+activeProxies.push(cells[1].textContent + ':' + cells[2].textContent);
+}
+});
+
+if (activeProxies.length === 0) {
+showStatus('❌ Tidak ada proxy aktif untuk didownload!', 'error');
+return;
+}
+
+const blob = new Blob([activeProxies.join('\\n')], { type: 'text/plain' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'active_proxies.txt';
+a.click();
+URL.revokeObjectURL(url);
+showStatus('💾 ' + activeProxies.length + ' proxy aktif didownload!');
+}
+
+function downloadAll() {
+const rows = document.querySelectorAll('#results tr');
+let allData = ['No,IP,Port,Status,Country,ISP,Protocol,Delay'];
+rows.forEach((row, index) => {
+const cells = row.cells;
+const data = [
+index + 1,
+cells[1].textContent,
+cells[2].textContent,
+cells[3].textContent,
+cells[5].getAttribute('data-country') || getCleanCountryCode(cells[5].textContent),
+cells[6].textContent,
+cells[7].textContent,
+cells[8].textContent
+];
+allData.push(data.join(','));
+});
+
+const blob = new Blob([allData.join('\\n')], { type: 'text/csv' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'all_proxy_results.csv';
+a.click();
+URL.revokeObjectURL(url);
+showStatus('💾 Semua hasil checking didownload!');
+}
+
+// ==================== ACCOUNT GENERATOR FUNCTIONS ====================
+
+function copyToClipboard(text) {
+navigator.clipboard.writeText(text).then(() => {
+showStatus('✅ Akun berhasil disalin!');
+});
+}
+
+function copyAllAccounts() {
+const accounts = document.querySelectorAll('#accountsResult .account-item');
+if (accounts.length === 0) {
+showStatus('❌ Tidak ada akun untuk disalin!', 'error');
+return;
+}
+
+let allText = '';
+accounts.forEach(account => {
+const config = account.querySelector('div:nth-child(2)').textContent;
+allText += config + '\\n';
+});
+
+navigator.clipboard.writeText(allText.trim()).then(() => {
+showStatus(\`✅ \${accounts.length} akun berhasil disalin!\`);
+});
+}
+
+function copyVlessAccounts() {
+const accounts = document.querySelectorAll('#accountsResult .account-item');
+if (accounts.length === 0) {
+showStatus('❌ Tidak ada akun untuk disalin!', 'error');
+return;
+}
+
+let vlessText = '';
+accounts.forEach(account => {
+const badge = account.querySelector('.protocol-badge').textContent;
+if (badge === 'VLESS') {
+const config = account.querySelector('div:nth-child(2)').textContent;
+vlessText += config + '\\n';
+}
+});
+
+if (!vlessText) {
+showStatus('❌ Tidak ada akun VLESS!', 'error');
+return;
+}
+
+navigator.clipboard.writeText(vlessText.trim()).then(() => {
+showStatus(\`✅ \${vlessText.trim().split('\\n').length} akun VLESS berhasil disalin!\`);
+});
+}
+
+function copyTrojanAccounts() {
+const accounts = document.querySelectorAll('#accountsResult .account-item');
+if (accounts.length === 0) {
+showStatus('❌ Tidak ada akun untuk disalin!', 'error');
+return;
+}
+
+let trojanText = '';
+accounts.forEach(account => {
+const badge = account.querySelector('.protocol-badge').textContent;
+if (badge === 'TROJAN') {
+const config = account.querySelector('div:nth-child(2)').textContent;
+trojanText += config + '\\n';
+}
+});
+
+if (!trojanText) {
+showStatus('❌ Tidak ada akun Trojan!', 'error');
+return;
+}
+
+navigator.clipboard.writeText(trojanText.trim()).then(() => {
+showStatus(\`✅ \${trojanText.trim().split('\\n').length} akun Trojan berhasil disalin!\`);
+});
+}
+
+function downloadAccounts() {
+const accounts = document.querySelectorAll('#accountsResult .account-item');
+if (accounts.length === 0) {
+showStatus('❌ Tidak ada akun untuk didownload!', 'error');
+return;
+}
+
+let allText = '';
+accounts.forEach(account => {
+const config = account.querySelector('div:nth-child(2)').textContent;
+allText += config + '\\n';
+});
+
+const blob = new Blob([allText.trim()], { type: 'text/plain' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'vless_trojan_accounts.txt';
+a.click();
+URL.revokeObjectURL(url);
+showStatus(\`💾 \${accounts.length} akun berhasil didownload!\`);
+}
+
+// Initialize
+document.getElementById('proxyInput').addEventListener('input', updateCount);
+updateCount();
+// Initialize GitHub preset
+onGitHubPresetChange();
+// Initialize domain selection
+document.getElementById('domainSelect').addEventListener('change', onDomainSelectChange);
+onDomainSelectChange();
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+const modal = document.getElementById('accountModal');
+if (event.target == modal) {
+closeModal();
+}
+}
+</script>
+</body>
+</html>`;
